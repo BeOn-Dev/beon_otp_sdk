@@ -1,0 +1,1 @@
+enum OtpMethods { whatsapp, sms }

@@ -28,6 +28,7 @@ class OtpModel extends Equatable {
     if (customCode != null) 'custom_code': customCode,
     'lang': lang,
     'type': type,
+    if (appSignature != null) 'app_signature': appSignature,
   };
 
   @override

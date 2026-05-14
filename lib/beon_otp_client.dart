@@ -42,6 +42,7 @@ class BeonOtpClient {
     String lang = 'en',
   }) async {
     String? appSignature = await getAndroidAppSignature();
+   
     return _useCase.sendOtp(
       otpModel: OtpModel(
         phoneNumber: phoneNumber,

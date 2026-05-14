@@ -10,7 +10,6 @@ class PinOtpWidget extends StatelessWidget {
     this.onChange,
     this.onTap,
     this.validator,
-    this.smsRetriever,
   });
 
   final TextEditingController controller;
@@ -19,7 +18,6 @@ class PinOtpWidget extends StatelessWidget {
   final ValueChanged<String>? onChange;
   final VoidCallback? onTap;
   final FormFieldValidator<String>? validator;
-  final SmsRetriever? smsRetriever;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +44,6 @@ class PinOtpWidget extends StatelessWidget {
         child: Pinput(
           controller: controller,
           length: length,
-          smsRetriever: smsRetriever,
           autofillHints: const [AutofillHints.oneTimeCode],
           keyboardType: TextInputType.number,
           hapticFeedbackType: HapticFeedbackType.lightImpact,

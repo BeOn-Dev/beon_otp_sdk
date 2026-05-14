@@ -1,23 +1,7 @@
 import 'package:beon_otp_sdk/beon_otp_sdk.dart';
 import 'package:flutter/material.dart';
-import 'package:pinput/pinput.dart';
 
 import 'pin_otp_widget/pin_otp_widget.dart';
-
-class _BeonSmsRetriever implements SmsRetriever {
-  _BeonSmsRetriever(this._sdk);
-
-  final BeonOtpClient _sdk;
-
-  @override
-  bool get listenForMultipleSms => false;
-
-  @override
-  Future<String?> getSmsCode() => _sdk.awaitOtpFromSms(otpLength: 6);
-
-  @override
-  Future<void> dispose() => _sdk.cancelOtpAutofill();
-}
 
 void main() => runApp(const DemoApp());
 
@@ -64,29 +48,33 @@ class _DemoScreenState extends State<DemoScreen> {
   @override
   void initState() {
     super.initState();
-    _listenForCode();
-    _client().getAndroidAppSignature().then((sig) {
+    _rebuildSdk();
+  }
+
+  void _rebuildSdk() {
+    _sdk?.autofilledCode.removeListener(_onAutofill);
+    _sdk?.dispose();
+    _sdk = BeonOtpClient(
+      token: token,
+      environment: _env,
+      enableLogging: true,
+    );
+    _lastBuiltToken = token;
+    _lastBuiltEnv = _env;
+    _sdk!.autofilledCode.addListener(_onAutofill);
+    _sdk!.getAndroidAppSignature().then((sig) {
       if (sig != null) debugPrint('Beon Android app signature: $sig');
     });
   }
 
-  _listenForCode() {
-    _client().awaitOtpFromSms(otpLength: 6).then((code) {
-      if (code != null) _code.text = code;
-    });
+  void _onAutofill() {
+    final code = _sdk?.autofilledCode.value;
+    if (code != null) _code.text = code;
   }
 
   BeonOtpClient _client() {
     if (_sdk == null || _lastBuiltToken != token || _lastBuiltEnv != _env) {
-      _sdk?.cancelOtpAutofill();
-      _sdk = BeonOtpClient(
-        token: token,
-        environment: _env,
-        enableLogging: true,
-      );
-
-      _lastBuiltToken = token;
-      _lastBuiltEnv = _env;
+      _rebuildSdk();
     }
     return _sdk!;
   }
@@ -137,8 +125,8 @@ class _DemoScreenState extends State<DemoScreen> {
 
   @override
   void dispose() {
-    _sdk?.cancelOtpAutofill();
-
+    _sdk?.autofilledCode.removeListener(_onAutofill);
+    _sdk?.dispose();
     _phone.dispose();
     _name.dispose();
     _code.dispose();
@@ -205,7 +193,6 @@ class _DemoScreenState extends State<DemoScreen> {
               PinOtpWidget(
                 controller: _code,
                 length: 6,
-                smsRetriever: _sdk == null ? null : _BeonSmsRetriever(_sdk!),
                 onComplete: (_) {
                   if (_expectedCode != null && !_verifying) _verify();
                 },

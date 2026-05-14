@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
 import 'src/core/helper/dio/dio_helper.dart';
 import 'src/core/helper/dio/endpoints.dart';
 import 'src/feature/otp/data/data_source/local/sms_autofill_data_source.dart';
@@ -33,6 +37,21 @@ class BeonOtpClient {
   late final OtpUseCase _useCase;
   late final AwaitOtpUseCase _awaitUseCase;
 
+  /// Emits the latest OTP auto-detected from an incoming SMS. `null` until
+  /// the first detection, and reset to `null` at the start of every new
+  /// [sendOtp] call so a stale value can't leak across attempts.
+  ///
+  /// Attach a listener once at SDK construction and the SDK will populate
+  /// it without any further intervention — the SMS Retriever listener is
+  /// armed automatically inside [sendOtp] before the HTTP request leaves
+  /// the device, eliminating the race between listener registration and
+  /// SMS arrival.
+  ///
+  /// Returns no value on iOS / web / desktop. On those platforms attach
+  /// `autofillHints: [AutofillHints.oneTimeCode]` to your TextField and
+  /// let the OS handle suggestion-bar autofill.
+  final ValueNotifier<String?> autofilledCode = ValueNotifier<String?>(null);
+
   Future<OtpSendResponse> sendOtp({
     required String phoneNumber,
     required String name,
@@ -41,8 +60,12 @@ class BeonOtpClient {
     String? customCode,
     String lang = 'en',
   }) async {
-    String? appSignature = await getAndroidAppSignature();
-   
+    final appSignature = await getAndroidAppSignature();
+
+    if (method == OtpMethods.sms) {
+      unawaited(_armAutofillListener(otpLength: otpLength));
+    }
+
     return _useCase.sendOtp(
       otpModel: OtpModel(
         phoneNumber: phoneNumber,
@@ -55,6 +78,16 @@ class BeonOtpClient {
         appSignature: appSignature,
       ),
     );
+  }
+
+  Future<void> _armAutofillListener({required int otpLength}) async {
+    await _awaitUseCase.cancel();
+    autofilledCode.value = null;
+    final code = await _awaitUseCase(
+      otpLength: otpLength,
+      timeout: const Duration(minutes: 5),
+    );
+    if (code != null) autofilledCode.value = code;
   }
 
   static bool verifyOtp({required String expected, required String input}) {
@@ -125,4 +158,13 @@ class BeonOtpClient {
   ///
   /// Returns `null` on iOS, web, and desktop.
   Future<String?> getAndroidAppSignature() => _awaitUseCase.getAppSignature();
+
+  /// Releases SDK resources: cancels any in-flight SMS Retriever listener
+  /// and disposes [autofilledCode]. Call from your root widget's `dispose`
+  /// (or whenever the client's lifetime ends) so no orphan broadcast
+  /// receiver outlives the screen that needed it.
+  Future<void> dispose() async {
+    await cancelOtpAutofill();
+    autofilledCode.dispose();
+  }
 }

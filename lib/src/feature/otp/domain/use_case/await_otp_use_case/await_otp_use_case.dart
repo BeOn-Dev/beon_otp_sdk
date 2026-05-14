@@ -8,16 +8,14 @@ class AwaitOtpUseCase {
   Future<String?> call({
     required int otpLength,
     required Duration timeout,
-    String? senderPhone,
   }) async {
-    final body = await source.startListening(
-      timeout: timeout,
-      senderPhone: senderPhone,
-    );
+    final body = await source.startListening(timeout: timeout);
     if (body == null) return null;
     final match = RegExp('\\b\\d{$otpLength}\\b').firstMatch(body);
     return match?.group(0);
   }
+
+  Future<String?> getAppSignature() => source.getAppSignature();
 
   Future<void> cancel() => source.stop();
 }

@@ -9,15 +9,12 @@ class SmsAutofillDataSource {
   bool get _isAndroid =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-  Future<String?> startListening({
-    required Duration timeout,
-    String? senderPhone,
-  }) async {
+  Future<String?> startListening({required Duration timeout}) async {
     if (!_isAndroid) return null;
 
     final interactor = _interactor ??= OTPInteractor();
     try {
-      return await interactor.startListenUserConsent(senderPhone).timeout(
+      return await interactor.startListenRetriever().timeout(
         timeout,
         onTimeout: () async {
           await _safeStop(interactor);
@@ -26,6 +23,15 @@ class SmsAutofillDataSource {
       );
     } catch (_) {
       await _safeStop(interactor);
+      return null;
+    }
+  }
+
+  Future<String?> getAppSignature() async {
+    if (!_isAndroid) return null;
+    try {
+      return await OTPInteractor().getAppSignature();
+    } catch (_) {
       return null;
     }
   }

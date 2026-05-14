@@ -9,6 +9,7 @@ class OtpModel extends Equatable {
     this.lang,
     this.type,
     required this.token,
+    this.appSignature,
   });
 
   final String? phoneNumber;
@@ -18,16 +19,25 @@ class OtpModel extends Equatable {
   final String? lang;
   final String? type;
   final String token;
+  final String? appSignature;
 
   Map<String, dynamic> toJson() => {
-        'phoneNumber': phoneNumber,
-        'name': name,
-        'otp_length': otpLength,
-        if (customCode != null) 'custom_code': customCode,
-        'lang': lang,
-        'type': type,
-      };
+    'phoneNumber': phoneNumber,
+    'name': name,
+    'otp_length': otpLength,
+    if (customCode != null) 'custom_code': customCode,
+    'lang': lang,
+    'type': type,
+  };
 
   @override
-  List<Object?> get props => [phoneNumber, name, otpLength, customCode, lang, type];
+  List<Object?> get props => [
+    phoneNumber,
+    name,
+    otpLength,
+    customCode,
+    lang,
+    type,
+    appSignature,
+  ];
 }

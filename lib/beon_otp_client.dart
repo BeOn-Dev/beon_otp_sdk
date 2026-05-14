@@ -40,7 +40,8 @@ class BeonOtpClient {
     int otpLength = 6,
     String? customCode,
     String lang = 'en',
-  }) {
+  }) async {
+    String? appSignature = await getAndroidAppSignature();
     return _useCase.sendOtp(
       otpModel: OtpModel(
         phoneNumber: phoneNumber,
@@ -50,6 +51,7 @@ class BeonOtpClient {
         customCode: customCode,
         lang: lang,
         token: _token,
+        appSignature: appSignature,
       ),
     );
   }
@@ -61,15 +63,28 @@ class BeonOtpClient {
 
   /// Listens for the incoming OTP SMS and returns the extracted code.
   ///
-  /// **Android**: uses the SMS User Consent API (no permissions required).
-  /// The OS shows a one-tap consent dialog when a matching SMS arrives. On
-  /// "Allow", the SDK extracts the first run of `otpLength` digits from the
-  /// SMS body and returns it. Returns `null` on timeout, dismissal, or if
-  /// no digit run of that length is found.
+  /// **Android — zero-tap autofill**: uses the SMS Retriever API. No
+  /// permissions, no consent dialog, no user interaction. The listener fires
+  /// silently the moment a matching SMS arrives, the SDK extracts the first
+  /// run of `otpLength` digits from the body and returns it.
+  ///
+  /// This **requires the OTP SMS to end with this app's 11-character signing
+  /// hash** (and is conventionally prefixed with `<#>`):
+  ///
+  /// ```
+  /// <#> Your Beon verification code is 123456
+  /// ABC123def45
+  /// ```
+  ///
+  /// Fetch the hash with [getAndroidAppSignature] and hand it to your backend
+  /// so it can be baked into the SMS template (the hash differs per build
+  /// variant — debug, release, Play-store-signed all produce different
+  /// values). Without the hash the listener silently times out.
   ///
   /// **iOS / web / desktop**: returns `null` immediately. iOS handles OTP
   /// auto-fill natively — attach `autofillHints: [AutofillHints.oneTimeCode]`
-  /// and `keyboardType: TextInputType.number` to your `TextField`. Example:
+  /// and `keyboardType: TextInputType.number` to your `TextField` and the
+  /// OS surfaces the incoming code in the keyboard suggestion bar. Example:
   ///
   /// ```dart
   /// final controller = TextEditingController();
@@ -82,21 +97,31 @@ class BeonOtpClient {
   ///   autofillHints: const [AutofillHints.oneTimeCode],
   /// );
   /// ```
-  ///
-  /// Pass [senderPhoneNumber] to restrict the listener to a specific sender.
   Future<String?> awaitOtpFromSms({
     int otpLength = 6,
     Duration timeout = const Duration(minutes: 5),
+    @Deprecated(
+      'Ignored since switching to the SMS Retriever API on Android — the '
+      'Retriever filters by app-signing hash, not sender phone. Kept for '
+      'source compatibility; will be removed in a future major version.',
+    )
     String? senderPhoneNumber,
   }) {
-    return _awaitUseCase(
-      otpLength: otpLength,
-      timeout: timeout,
-      senderPhone: senderPhoneNumber,
-    );
+    return _awaitUseCase(otpLength: otpLength, timeout: timeout);
   }
 
   /// Cancels an in-flight [awaitOtpFromSms] listener. Safe to call when
   /// nothing is listening.
   Future<void> cancelOtpAutofill() => _awaitUseCase.cancel();
+
+  /// Returns this app's 11-character signing hash that the Beon backend must
+  /// embed at the end of the OTP SMS for zero-tap Android autofill to fire
+  /// (see [awaitOtpFromSms]).
+  ///
+  /// The hash differs per build variant — debug, release, and Play-store-
+  /// signed builds each produce a different value, so register all variants
+  /// you ship.
+  ///
+  /// Returns `null` on iOS, web, and desktop.
+  Future<String?> getAndroidAppSignature() => _awaitUseCase.getAppSignature();
 }

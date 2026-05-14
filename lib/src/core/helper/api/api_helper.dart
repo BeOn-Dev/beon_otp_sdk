@@ -85,10 +85,7 @@ class ApiHelper {
           cause: e,
         );
       case DioExceptionType.badCertificate:
-        return BeonOtpException(
-          message: 'Invalid TLS certificate.',
-          cause: e,
-        );
+        return BeonOtpException(message: 'Invalid TLS certificate.', cause: e);
       case DioExceptionType.cancel:
         return BeonOtpException(message: 'Request cancelled.', cause: e);
       case DioExceptionType.badResponse:

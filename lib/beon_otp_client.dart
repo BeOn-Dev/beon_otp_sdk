@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'src/core/helper/dio/dio_helper.dart';
-import 'src/core/helper/dio/endpoints.dart';
 import 'src/feature/otp/data/data_source/local/sms_autofill_data_source.dart';
 import 'src/feature/otp/data/data_source/remote/otp_remote_data_source/otp_remote_data_source.dart';
 import 'src/feature/otp/data/model/enums/otp_methods/otp_methods.dart';
@@ -16,15 +15,11 @@ import 'src/feature/otp/domain/use_case/otp_use_case/otp_use_case.dart';
 class BeonOtpClient {
   BeonOtpClient({
     required String token,
-    Environment environment = Environment.live,
+    bool enableAutofill = true,
     Duration timeout = const Duration(seconds: 30),
-    bool enableLogging = false,
-  }) : _token = token {
-    DioHelper.init(
-      environment: environment,
-      timeout: timeout,
-      enableLogging: enableLogging,
-    );
+  }) : _token = token,
+       _enableAutofill = enableAutofill {
+    DioHelper.init(timeout: timeout);
     _useCase = OtpUseCase(
       otpRepository: OtpRepositoryImplementation(
         dataSource: OtpRemoteDataSource(),
@@ -34,6 +29,7 @@ class BeonOtpClient {
   }
 
   final String _token;
+  final bool _enableAutofill;
   late final OtpUseCase _useCase;
   late final AwaitOtpUseCase _awaitUseCase;
 
@@ -50,6 +46,9 @@ class BeonOtpClient {
   /// Returns no value on iOS / web / desktop. On those platforms attach
   /// `autofillHints: [AutofillHints.oneTimeCode]` to your TextField and
   /// let the OS handle suggestion-bar autofill.
+  ///
+  /// Stays at `null` for the lifetime of the client when it was constructed
+  /// with `enableAutofill: false`.
   final ValueNotifier<String?> autofilledCode = ValueNotifier<String?>(null);
 
   Future<OtpSendResponse> sendOtp({
@@ -60,10 +59,12 @@ class BeonOtpClient {
     String? customCode,
     String lang = 'en',
   }) async {
-    final appSignature = await getAndroidAppSignature();
-
-    if (method == OtpMethods.sms) {
-      unawaited(_armAutofillListener(otpLength: otpLength));
+    String? appSignature;
+    if (_enableAutofill) {
+      appSignature = await getAndroidAppSignature();
+      if (method == OtpMethods.sms) {
+        unawaited(_armAutofillListener(otpLength: otpLength));
+      }
     }
 
     return _useCase.sendOtp(
@@ -141,6 +142,7 @@ class BeonOtpClient {
     )
     String? senderPhoneNumber,
   }) {
+    if (!_enableAutofill) return Future<String?>.value(null);
     return _awaitUseCase(otpLength: otpLength, timeout: timeout);
   }
 

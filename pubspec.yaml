@@ -1,11 +1,16 @@
 name: beon_otp_sdk
-description: "Lightweight Beon OTP send/verify client — logic only, no UI."
-publish_to: 'none'
+description: BeOn OTP SDK for Flutter — send, verify, and zero-tap auto-fill one-time passwords via Android SMS Retriever and iOS keyboard suggestions.
+version: 1.0.0
 
-version: 1.0.0+1
+topics:
+  - otp
+  - authentication
+  - sms
+  - autofill
 
 environment:
   sdk: ^3.10.9
+  flutter: ">=3.0.0"
 
 dependencies:
   flutter:
@@ -13,7 +18,6 @@ dependencies:
 
   dio: ^5.9.2
   equatable: ^2.0.8
-  pretty_dio_logger: ^1.4.0
   otp_autofill: ^4.1.0
 
 dev_dependencies:

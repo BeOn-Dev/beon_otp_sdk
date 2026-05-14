@@ -15,16 +15,12 @@ class DioHelper {
     return _dio!;
   }
 
-  static void init({
-    Environment environment = Environment.live,
-    Duration timeout = const Duration(seconds: 30),
-    bool enableLogging = false,
-  }) {
+  static void init({Duration timeout = const Duration(seconds: 30)}) {
     if (_initialized) return;
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: resolveBaseUrl(environment),
+        baseUrl: resolveBaseUrl(),
         receiveDataWhenStatusError: true,
         followRedirects: false,
         validateStatus: (_) => true,

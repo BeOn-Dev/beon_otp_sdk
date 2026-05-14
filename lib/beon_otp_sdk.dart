@@ -22,7 +22,6 @@
 library;
 
 export 'beon_otp_client.dart' show BeonOtpClient;
-export 'src/core/helper/dio/endpoints.dart' show Environment;
 export 'src/core/util/exceptions/beon_otp_exception.dart' show BeonOtpException;
 export 'src/feature/otp/data/model/enums/otp_methods/otp_methods.dart'
     show OtpMethods;

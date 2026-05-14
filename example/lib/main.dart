@@ -27,17 +27,15 @@ class DemoScreen extends StatefulWidget {
 }
 
 class _DemoScreenState extends State<DemoScreen> {
-  final _phone = TextEditingController(text: '01153634504');
+  final _phone = TextEditingController(text: '01070809633');
   final _name = TextEditingController(text: 'Ahmed Fadlallah');
   final _code = TextEditingController();
 
-  String token = "BeOn-Token";
+  String token = "Beon_Token";
   OtpMethods _method = OtpMethods.sms;
-  Environment _env = Environment.live;
 
   BeonOtpClient? _sdk;
   String? _lastBuiltToken;
-  Environment? _lastBuiltEnv;
 
   String? _expectedCode;
   String _status = '';
@@ -54,9 +52,8 @@ class _DemoScreenState extends State<DemoScreen> {
   void _rebuildSdk() {
     _sdk?.autofilledCode.removeListener(_onAutofill);
     _sdk?.dispose();
-    _sdk = BeonOtpClient(token: token, environment: _env, enableLogging: true);
+    _sdk = BeonOtpClient(token: token, enableAutofill: true);
     _lastBuiltToken = token;
-    _lastBuiltEnv = _env;
     _sdk!.autofilledCode.addListener(_onAutofill);
     _sdk!.getAndroidAppSignature().then((sig) {
       if (sig != null) debugPrint('Beon Android app signature: $sig');
@@ -69,7 +66,7 @@ class _DemoScreenState extends State<DemoScreen> {
   }
 
   BeonOtpClient _client() {
-    if (_sdk == null || _lastBuiltToken != token || _lastBuiltEnv != _env) {
+    if (_sdk == null || _lastBuiltToken != token) {
       _rebuildSdk();
     }
     return _sdk!;
@@ -163,18 +160,6 @@ class _DemoScreenState extends State<DemoScreen> {
                 ],
                 selected: {_method},
                 onSelectionChanged: (s) => setState(() => _method = s.first),
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<Environment>(
-                segments: const [
-                  ButtonSegment(value: Environment.live, label: Text('Live')),
-                  ButtonSegment(
-                    value: Environment.staging,
-                    label: Text('Staging'),
-                  ),
-                ],
-                selected: {_env},
-                onSelectionChanged: (s) => setState(() => _env = s.first),
               ),
               const SizedBox(height: 16),
               FilledButton(

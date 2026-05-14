@@ -23,20 +23,20 @@ class PinOtpWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w500,
-          color: cs.onSurface,
-        );
+      fontWeight: FontWeight.w500,
+      color: cs.onSurface,
+    );
 
     PinTheme box(Color border, Color fill) => PinTheme(
-          width: 52,
-          height: 60,
-          textStyle: textStyle,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: border),
-            color: fill,
-          ),
-        );
+      width: 52,
+      height: 60,
+      textStyle: textStyle,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border),
+        color: fill,
+      ),
+    );
 
     return Directionality(
       textDirection: TextDirection.ltr,
@@ -53,8 +53,7 @@ class PinOtpWidget extends StatelessWidget {
           validator: validator,
           separatorBuilder: (_) => const SizedBox(width: 12),
           defaultPinTheme: box(cs.outline, cs.surfaceContainerHighest),
-          focusedPinTheme:
-              box(cs.primary, cs.primary.withValues(alpha: 0.08)),
+          focusedPinTheme: box(cs.primary, cs.primary.withValues(alpha: 0.08)),
           submittedPinTheme: box(cs.onSurface, Colors.transparent),
           errorPinTheme: box(cs.error, cs.error.withValues(alpha: 0.12)),
           cursor: Column(

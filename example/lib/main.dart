@@ -31,7 +31,7 @@ class _DemoScreenState extends State<DemoScreen> {
   final _name = TextEditingController(text: 'Ahmed Fadlallah');
   final _code = TextEditingController();
 
-  String token = "SPb4sbemr5bwb7sjzCqTcL";
+  String token = "BeOn-Token";
   OtpMethods _method = OtpMethods.sms;
   Environment _env = Environment.live;
 
@@ -54,11 +54,7 @@ class _DemoScreenState extends State<DemoScreen> {
   void _rebuildSdk() {
     _sdk?.autofilledCode.removeListener(_onAutofill);
     _sdk?.dispose();
-    _sdk = BeonOtpClient(
-      token: token,
-      environment: _env,
-      enableLogging: true,
-    );
+    _sdk = BeonOtpClient(token: token, environment: _env, enableLogging: true);
     _lastBuiltToken = token;
     _lastBuiltEnv = _env;
     _sdk!.autofilledCode.addListener(_onAutofill);

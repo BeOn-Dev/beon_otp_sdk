@@ -1,6 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import 'endpoints.dart';
 
@@ -24,27 +22,17 @@ class DioHelper {
   }) {
     if (_initialized) return;
 
-    _dio = Dio(BaseOptions(
-      baseUrl: resolveBaseUrl(environment),
-      receiveDataWhenStatusError: true,
-      followRedirects: false,
-      validateStatus: (_) => true,
-      connectTimeout: timeout,
-      receiveTimeout: timeout,
-      sendTimeout: timeout,
-    ));
-
-    if (enableLogging && !kReleaseMode) {
-      _dio!.interceptors.add(PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-        maxWidth: 90,
-      ));
-    }
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: resolveBaseUrl(environment),
+        receiveDataWhenStatusError: true,
+        followRedirects: false,
+        validateStatus: (_) => true,
+        connectTimeout: timeout,
+        receiveTimeout: timeout,
+        sendTimeout: timeout,
+      ),
+    );
 
     _initialized = true;
   }
@@ -95,7 +83,8 @@ class DioHelper {
       url,
       queryParameters: query,
       data: data,
-      options: options ??
+      options:
+          options ??
           Options(
             validateStatus: (_) => true,
             contentType: Headers.jsonContentType,
